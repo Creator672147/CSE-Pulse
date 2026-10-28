@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CSE Pulse</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky top rail, large page heading, one impact feature card, then a filterable news list. Mirrors the Replit CSE Pulse build. */
+:root {
+  --bg: #0e1016;
+  --card: #14181f;
+  --card-2: #181c26;
+  --border: #282e39;
+  --fg: #edeae3;
+  --muted: #929baa;
+  --accent: #f4b134;
+  --accent-ink: #0e1016;
+  --rail: #090b11;
+  --rail-border: #212630;
+  --global: #7cc0e2;
+  --grid: rgba(40, 46, 57, 0.28);
+  --glow: rgba(244, 177, 52, 0.10);
+  --shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f3f5f7; --card: #ffffff; --card-2: #eceff3; --border: #d9dee6; --fg: #20242d; --muted: #56616f;
+    --accent: #965b00; --accent-ink: #ffffff; --rail: #e9edf2; --rail-border: #d6dce5; --global: #1f6f94;
+    --grid: rgba(120, 132, 150, 0.14); --glow: rgba(213, 144, 32, 0.12); --shadow: 0 10px 26px rgba(30, 40, 60, 0.10);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f3f5f7; --card: #ffffff; --card-2: #eceff3; --border: #d9dee6; --fg: #20242d; --muted: #56616f;
+  --accent: #965b00; --accent-ink: #ffffff; --rail: #e9edf2; --rail-border: #d6dce5; --global: #1f6f94;
+  --grid: rgba(120, 132, 150, 0.14); --glow: rgba(213, 144, 32, 0.12); --shadow: 0 10px 26px rgba(30, 40, 60, 0.10);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100%;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 58% -25%, var(--glow), transparent 45%),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: auto, 32px 32px, 32px 32px;
+  color: var(--fg); font-family: var(--font-sans); font-size: 14px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--rail); z-index: 10; }
+button, input { font: inherit; color: inherit; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: 1240px; margin: 0 auto; }
+
+/* top rail */
+.rail { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--rail); border-bottom: 1px solid var(--rail-border); }
+.rail .inner { display: flex; align-items: center; gap: 24px; min-height: 64px; flex-wrap: wrap; padding-block: 8px; }
+.brand { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; }
+.mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: 600 13px var(--font-mono); letter-spacing: -0.12em; }
+.brand-copy { display: grid; line-height: 1.15; }
+.brand-copy strong { font-size: 13px; letter-spacing: -0.02em; }
+.brand-copy small { font: 9px var(--font-mono); letter-spacing: 0.12em; color: var(--muted); }
+.divider { width: 1px; height: 27px; background: var(--rail-border); }
+.nav { display: flex; gap: 20px; }
+.nav a { font-size: 12px; color: var(--muted); text-decoration: none; transition: color 0.16s; }
+.nav a:hover { color: var(--accent); }
+.conn { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 10px; color: var(--muted); }
+.light-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.theme-btn { border: 1px solid var(--rail-border); border-radius: 6px; background: transparent; padding: 4px 10px; font: 10px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); cursor: pointer; }
+.theme-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* heading */
+.heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 28px; flex-wrap: wrap; padding-block: 56px 32px; }
+.eyebrow { display: flex; align-items: center; gap: 8px; color: var(--accent); font: 500 10px var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; }
+.eyebrow i { font-style: normal; color: var(--muted); }
+h1 { margin: 16px 0 0; font-size: clamp(46px, 7vw, 78px); font-weight: 600; line-height: 0.96; letter-spacing: -0.065em; text-wrap: balance; }
+h1 span { color: var(--accent); }
+.lede { max-width: 510px; margin: 18px 0 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.stamp { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; font: 11px var(--font-mono); color: var(--muted); }
+.stamp b { font-weight: 500; color: var(--fg); }
+
+/* impact feature */
+.feature { position: relative; overflow: hidden; padding: 26px 30px 20px; border: 1px solid color-mix(in srgb, var(--accent) 27%, transparent); border-radius: 12px; background: linear-gradient(115deg, var(--card) 5%, var(--card-2) 100%); box-shadow: var(--shadow); }
+.feature::after { content: ""; position: absolute; top: -95px; right: -75px; width: 290px; height: 210px; border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 50%; transform: rotate(-20deg); pointer-events: none; }
+.feature-top { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+.ftitle { display: flex; align-items: center; gap: 13px; }
+.ficon { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); border-radius: 9px; color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.kicker { margin: 0; color: var(--muted); font: 500 9px var(--font-mono); letter-spacing: 0.15em; text-transform: uppercase; }
+.ftitle h2 { margin: 5px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -0.025em; }
+.tone { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 999px; color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); font: 10px var(--font-mono); white-space: nowrap; }
+.tone i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.impact-copy { position: relative; z-index: 1; max-width: 950px; margin: 24px 0 20px; font-size: clamp(15px, 1.8vw, 19px); line-height: 1.7; letter-spacing: -0.012em; }
+.disclosure { position: relative; z-index: 1; display: flex; gap: 9px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--muted); font-size: 10.5px; line-height: 1.6; }
+.disclosure svg { flex: 0 0 auto; margin-top: 2px; color: var(--accent); }
+
+/* news */
+.news { margin-top: 32px; border: 1px solid var(--border); border-radius: 12px; background: color-mix(in srgb, var(--card) 94%, transparent); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16); }
+.news-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; padding: 22px 24px; border-bottom: 1px solid var(--border); }
+.news-h h2 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.025em; }
+.news-h h2 svg { color: var(--accent); }
+.count { display: grid; place-items: center; min-width: 21px; height: 21px; padding: 0 5px; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font: 10px var(--font-mono); }
+.news-h p { margin: 5px 0 0 26px; color: var(--muted); font-size: 11px; }
+.tools { display: grid; justify-items: end; gap: 9px; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filter { display: inline-flex; align-items: center; gap: 6px; min-height: 29px; padding: 0 9px; border: 1px solid var(--border); border-radius: 6px; background: color-mix(in srgb, var(--bg) 48%, transparent); color: var(--muted); font-size: 10px; cursor: pointer; transition: background 0.16s, border-color 0.16s, color 0.16s; }
+.filter:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--fg); }
+.filter[aria-pressed="true"] { border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); }
+.filter span { font: 9px var(--font-mono); }
+.search { display: flex; align-items: center; gap: 8px; width: min(240px, 100%); height: 35px; padding: 0 10px; border: 1px solid var(--border); border-radius: 7px; background: color-mix(in srgb, var(--bg) 48%, transparent); color: var(--muted); }
+.search:focus-within { border-color: color-mix(in srgb, var(--accent) 60%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 12%, transparent); }
+.search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 11px; }
+.search input::placeholder { color: var(--muted); }
+.list { padding: 0 24px; list-style: none; margin: 0; }
+.item { padding: 22px 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent); animation: rise 0.36s both; }
+.item:last-child { border-bottom: 0; }
+.meta { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+.src { display: inline-flex; align-items: center; gap: 7px; color: var(--accent); font: 500 9px var(--font-mono); letter-spacing: 0.13em; text-transform: uppercase; }
+.src i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.badge { padding: 3px 6px; border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent); border-radius: 4px; color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); font: 8.5px var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.badge.global { border-color: color-mix(in srgb, var(--global) 30%, transparent); color: var(--global); background: color-mix(in srgb, var(--global) 8%, transparent); }
+.item h3 { margin: 10px 0 0; font-size: 16px; font-weight: 600; line-height: 1.45; letter-spacing: -0.02em; text-wrap: balance; }
+.sum { max-width: 900px; margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.note { display: grid; gap: 8px; margin-top: 15px; padding: 11px 13px; border-left: 2px solid color-mix(in srgb, var(--accent) 66%, transparent); background: color-mix(in srgb, var(--accent) 4.5%, transparent); }
+.note-h { display: inline-flex; align-items: center; gap: 7px; color: var(--accent); font: 500 9px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.note-body { display: grid; grid-template-columns: minmax(120px, 170px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.topic { color: var(--accent); font: 500 10px var(--font-mono); }
+.note p { margin: 0; color: color-mix(in srgb, var(--fg) 76%, transparent); font-size: 11.5px; line-height: 1.55; }
+.empty { display: grid; justify-items: center; gap: 8px; min-height: 160px; place-content: center; padding: 28px; text-align: center; color: var(--muted); font-size: 11px; }
+.empty strong { color: var(--fg); font-size: 13px; }
+.srcbar { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 13px 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 9.5px; }
+
+.example { margin-top: 20px; padding: 10px 14px; border: 1px dashed var(--border); border-radius: 8px; color: var(--muted); font-size: 11.5px; }
+.example b { color: var(--accent); font: 500 10px var(--font-mono); letter-spacing: 0.1em; }
+
+footer { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 22px; padding-block: 22px 34px; color: var(--muted); }
+.fbrand { display: flex; align-items: center; gap: 9px; font-size: 10px; color: color-mix(in srgb, var(--fg) 75%, transparent); white-space: nowrap; }
+.mark.mini { width: 24px; height: 24px; border-radius: 5px; font-size: 9px; }
+footer p { margin: 0; text-align: center; font-size: 9.5px; line-height: 1.55; }
+.fsrc { font: 9px var(--font-mono); color: var(--accent); white-space: nowrap; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 720px) {
+  .rail .inner { gap: 14px; min-height: 58px; }
+  .divider { display: none; }
+  .nav { gap: 12px; } .nav a { font-size: 10px; }
+  .heading { flex-direction: column; align-items: flex-start; gap: 20px; padding-block: 40px 24px; }
+  .stamp { align-items: flex-start; }
+  .feature { padding: 20px 18px 16px; }
+  .news-h { flex-direction: column; padding: 18px; }
+  .tools { width: 100%; justify-items: stretch; }
+  .search { width: 100%; }
+  .list { padding: 0 18px; }
+  .note-body { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .srcbar { padding: 12px 18px; }
+  footer { grid-template-columns: minmax(0, 1fr); justify-items: start; gap: 10px; }
+  footer p { text-align: left; }
+}
+@media (max-width: 430px) { .brand-copy small { font-size: 8px; } .item h3 { font-size: 14px; } .conn .where { display: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+.date { font: 500 10px var(--font-mono); color: var(--muted); letter-spacing: 0.04em; }
+.links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.links a { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); font: 10px var(--font-mono); text-decoration: none; transition: color 0.16s, border-color 0.16s; }
+.links a:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.merged { color: var(--accent); font: 9px var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<header class="rail gutter">
+  <div class="inner">
+    <a class="brand" href="#top"><span class="mark">CSE</span><span class="brand-copy"><strong>CSE Pulse</strong><small>COLOMBO STOCK EXCHANGE</small></span></a>
+    <span class="divider"></span>
+    <nav class="nav" aria-label="Sections"><a href="#brief">Impact brief</a><a href="#news">News</a></nav>
+    <div class="conn"><i class="light-dot"></i><span id="clock" class="mono">--:--</span><span class="where">Colombo</span><button class="theme-btn" id="theme" type="button">Theme</button></div>
+  </div>
+</header>
+
+<main class="gutter" id="top">
+  <div class="inner">
+    <div class="heading">
+      <div>
+        <div class="eyebrow">Sri Lanka<i>/</i>Global economy</div>
+        <h1>CSE <span>Pulse</span></h1>
+        <p class="lede">Economy headlines from Sri Lanka and abroad, each with a plain explanation of how it could reach the Colombo market.</p>
+      </div>
+      <div class="stamp"><span>Brief date <b id="today">--</b></span><span id="stampd">Updated daily</span><span>Rule-based, no price data</span></div>
+    </div>
+
+    <section class="feature" id="brief" aria-labelledby="f-h">
+      <div class="feature-top">
+        <div class="ftitle">
+          <span class="ficon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>
+          <div><p class="kicker">Market impact summary</p><h2 id="f-h">What the day's headlines point to</h2></div>
+        </div>
+        <span class="tone"><i></i>Mixed tone</span>
+      </div>
+      <p class="impact-copy" id="f-copy">Loading the latest headlines.</p>
+      <div class="disclosure">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <span>Impact notes come from keyword rules applied to each headline. They use no share prices and no AI model, and they are information only, not investment advice.</span>
+      </div>
+    </section>
+
+    <section class="news" id="news" aria-labelledby="n-h">
+      <div class="news-h">
+        <div>
+          <h2 id="n-h"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h13v14H6a2 2 0 0 1-2-2V5zM17 8h3v9a2 2 0 0 1-2 2"/><path d="M8 9h5M8 13h5"/></svg>Headlines <span class="count" id="n-count">0</span></h2>
+          <p>Local stories happen in Sri Lanka. Global stories appear only when a Sri Lanka market channel is plausible. A story reported by two sites appears once, with both links.</p>
+        </div>
+        <div class="tools">
+          <div class="filters" id="filters" role="group" aria-label="Filter headlines"></div>
+          <label class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search headlines" aria-label="Search headlines"></label>
+        </div>
+      </div>
+      <ul class="list" id="list"></ul>
+      <div class="srcbar"><span id="dupes">Loading</span><span class="mono" id="shown">0 shown</span></div>
+    </section>
+
+    <p class="example"><b>UPDATED DAILY</b> <span id="upd">Loading the latest headlines.</span> Each headline links to the original article.</p>
+
+    <footer>
+      <div class="fbrand"><span class="mark mini">CSE</span>CSE Pulse</div>
+      <p>Information only. Not investment advice. Impact notes are heuristic and may be incomplete or delayed.</p>
+      <span class="fsrc">5 sources · rule-based</span>
+    </footer>
+  </div>
+</main>
+
+<script>
+/* ---- DATA: snapshot of headlines from the four sources, 28 Oct 2026 ---- */
+const SRC = { ft: "Daily FT", bb: "Bloomberg", lbo: "Lanka Business Online", ips: "IPS", eco: "Economy.lk" };
+let RAW = [];
+let BRIEF = "";
+
+/* ---- rule-based impact notes (first matching rule wins) ---- */
+const RULES = [
+  [/tariff/i, "Tariffs and export demand", "Higher US tariffs would raise prices for Sri Lankan apparel in its largest market. That can cut orders and margins for garment exporters."],
+  [/\bIran\b|geopolit/i, "Oil and geopolitics", "Middle East tension tends to lift crude prices. Sri Lanka imports its oil, so dearer fuel raises costs, widens the trade deficit and pressures the rupee."],
+  [/crude/i, "Oil and US rates", "Crude near US$ 100 raises Sri Lanka's fuel and power bill. A US 10-year yield near 5% makes dollar assets more attractive and can pull foreign money out of frontier markets."],
+  [/ASPI|stock market|share market/i, "Equity sentiment", "A run of losing sessions points to cautious investors. Turnover and foreign flows show whether the selling is broad or concentrated in a few shares."],
+  [/export/i, "Export earnings", "Strong export earnings bring in dollars and support the rupee. They also lift the outlook for apparel, tea and other exporting companies."],
+  [/tourist/i, "Tourism and inflows", "More arrivals lift hotel occupancy and foreign currency inflows, which supports leisure companies and the rupee."],
+  [/tyre/i, "Trade policy", "Tighter import standards can favour local manufacturers while raising costs for importers and buyers."],
+  [/private investors|public-private|industrial zone/i, "Investment and infrastructure", "Plans to bring in private capital can support construction, ports and utilities firms over time. Timing and legislation decide how much reaches earnings."],
+  [/stake|buys about|acquir/i, "Corporate action", "Stake deals can move the share price of the companies involved and signal how management values the business."],
+  [/power cut|LPG|energy/i, "Energy supply and cost", "Power cuts and fuel supply changes raise costs and interrupt output for manufacturers and services."],
+  [/IOSCO|regulators/i, "Market regulation", "Closer regulatory cooperation supports investor confidence and market integrity over the longer term."],
+  [/terror|trade lifeline/i, "Trade access", "If preferential access to export markets were lost, apparel and other exporters would face higher tariffs and weaker earnings."],
+  [/Suez|shipping|logistics hub/i, "Shipping and logistics", "Changes in shipping routes and port projects shape transhipment volumes, port revenue and the outlook for logistics companies."],
+  [/rating/i, "Credit ratings", "An expected rating helps the issuer price and place its debt. A higher rating usually means cheaper funding."],
+  [/IMF/i, "External financing", "A return to global bond markets would widen funding options but ties the country to international interest rates and investor appetite."],
+  [/debenture|debt|bond/i, "Debt and funding", "Large local debt issues and rejected auction bids show where borrowing costs sit. Higher yields can pull money from shares into fixed income, and heavy issuance shapes bank funding."],
+  [/cost pressure|input cost/i, "Input costs", "Rising costs squeeze margins unless companies can pass them on, which weighs on earnings in manufacturing and packaging."],
+  [/policy|growth|roundtable|income status|state of the economy/i, "Policy research", "Context for the longer-term outlook rather than a near-term price driver."]
+];
+const impactFor = (i) => { const x = i.t + " " + i.sum; const r = RULES.find((q) => q[0].test(x)); return r ? { topic: r[1], imp: r[2] } : { topic: "General economy", imp: "No direct market channel was found for this item." }; };
+
+/* ---- merge duplicates: same cluster key, or same normalised title ---- */
+const norm = (t) => t.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+function dedupe(rows) {
+  const groups = new Map();
+  rows.forEach((r) => {
+    const key = r.k || norm(r.t);
+    const g = groups.get(key);
+    if (!g) { groups.set(key, { ...r, srcs: [{ s: r.s, u: r.u }] }); return; }
+    if (!g.srcs.some((x) => x.u === r.u)) g.srcs.push({ s: r.s, u: r.u });
+    if (r.d > g.d) g.d = r.d;
+  });
+  return [...groups.values()].sort((a, b) => (a.d < b.d ? 1 : a.d > b.d ? -1 : 0));
+}
+let ITEMS = [];
+let MERGED = 0;
+
+/* ---- render ---- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmtDate = (d) => new Date(d + "T00:00:00Z").toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short" });
+let scope = "all";
+
+function renderFilters() {
+  const keys = ["all", "Local", "Global"];
+  const label = (k) => k === "all" ? "All" : k;
+  const count = (k) => (k === "all" ? ITEMS.length : ITEMS.filter((i) => i.r === k).length);
+  $("filters").innerHTML = keys.map((k) => '<button class="filter" type="button" data-k="' + k + '" aria-pressed="' + (scope === k) + '">' + label(k) + " <span>" + count(k) + "</span></button>").join("");
+}
+function renderList() {
+  const q = $("q").value.trim().toLowerCase();
+  const rows = ITEMS.filter((i) => (scope === "all" || i.r === scope) && (!q || (i.t + " " + i.sum + " " + impactFor(i).topic).toLowerCase().includes(q)));
+  $("n-count").textContent = ITEMS.length;
+  $("shown").textContent = rows.length + " shown";
+  $("dupes").textContent = RAW.length + " headlines collected, " + MERGED + " duplicate" + (MERGED === 1 ? "" : "s") + " merged";
+  $("list").innerHTML = rows.length ? rows.map((i, n) => {
+    const im = impactFor(i);
+    return '<li class="item" style="animation-delay:' + Math.min(n, 10) * 30 + 'ms"><div class="meta"><span class="date">' + fmtDate(i.d) + '</span><span class="badge ' + (i.r === "Global" ? "global" : "") + '">' + i.r + "</span>" +
+      (i.srcs.length > 1 ? '<span class="merged">' + i.srcs.length + " sources merged</span>" : "") + "</div>" +
+      "<h3>" + esc(i.t) + '</h3><p class="sum">' + esc(i.sum) + "</p>" +
+      '<div class="links">' + i.srcs.map((x) => '<a href="' + esc(x.u) + '" target="_blank" rel="noopener noreferrer">' + esc(SRC[x.s]) + " ↗</a>").join("") + "</div>" +
+      '<div class="note"><span class="note-h"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/></svg>Possible market impact</span>' +
+      '<div class="note-body"><span class="topic">' + esc(im.topic) + "</span><p>" + esc(im.imp) + "</p></div></div></li>";
+  }).join("") : '<li><div class="empty"><strong>No headlines match</strong><span>Try a different word, or switch between Local and Global.</span></div></li>';
+}
+$("filters").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-k]"); if (!b) return;
+  scope = b.dataset.k; renderFilters(); renderList();
+});
+$("q").addEventListener("input", renderList);
+
+$("today").textContent = new Date().toLocaleDateString("en-GB", { timeZone: "Asia/Colombo", day: "2-digit", month: "short", year: "numeric" });
+function tick() { $("clock").textContent = new Date().toLocaleTimeString("en-GB", { timeZone: "Asia/Colombo", hour: "2-digit", minute: "2-digit", hour12: false }); }
+$("theme").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : !matchMedia("(prefers-color-scheme: light)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+});
+function briefFrom(items) {
+  const counts = {};
+  items.forEach((i) => { const t = impactFor(i).topic; counts[t] = (counts[t] || 0) + 1; });
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3).map((e) => e[0].toLowerCase());
+  const loc = items.filter((i) => i.r === "Local").length;
+  return loc + " Sri Lankan and " + (items.length - loc) + " global stories in the latest update. The most common themes are " + top.join(", ") + ".";
+}
+async function load() {
+  try {
+    const res = await fetch("news.json", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    RAW = data.items || [];
+    ITEMS = dedupe(RAW);
+    MERGED = RAW.length - ITEMS.length;
+    $("f-copy").textContent = ITEMS.length ? briefFrom(ITEMS) : "No headlines in the latest update.";
+    const when = data.updated ? new Date(data.updated).toLocaleString("en-GB", { timeZone: "Asia/Colombo", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false }) : "unknown time";
+    const stale = data.failed && data.failed.length ? " Earlier stories are shown for: " + data.failed.map((k) => SRC[k] || k).join(", ") + "." : "";
+    $("upd").textContent = "Last update " + when + " Colombo time." + stale;
+    $("stampd").textContent = "Updated " + when;
+  } catch (e) {
+    $("f-copy").textContent = "The latest headlines could not be loaded. Reload the page to try again.";
+    $("upd").textContent = "news.json could not be read.";
+  }
+  renderFilters(); renderList();
+}
+tick(); setInterval(tick, 30000); load();
+</script>
+</body>
+</html>
